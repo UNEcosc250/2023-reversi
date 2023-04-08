@@ -1,1 +1,0 @@
-// No plugin needed for Scala 3

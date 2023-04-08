@@ -1,4 +1,4 @@
-# Assignment 2: Boids
+# Assignment 2: Reversi
 
 In a pure functional language, such as Haskell, the code is a pure (no side-effects) description of a program which is
 then run in a runtime environment.
@@ -12,132 +12,52 @@ We're not going to go quite that far - this is only your second assignment in th
 to separate our functional code from our imperative code somewhat. And we're going to try to make the "important"
 code functional (and more testable).
 
-We're going to do a simulation where:
+In this case, we're going to use functional programming to write a little classical AI for the game of Reversi. 
+The AI will be able to look ahead a variable number of moves to pick the best move to take.
+The AI code (code in `Reversi.scala`) should be pure and functional.
 
-* The core logic of the simulation (the current frame, and the "frame memory" storing previously calculated frames) is
-  written functionally.
-* The UI and a SimulationController class are written imperatively.
+The UI has been written for you (in `App.scala`), and does include some mutation.
 
-The simulation is *boids*.
+## Reversi
 
-## Boids
+[Reversi](https://en.wikipedia.org/wiki/Reversi) is a traditional game played on an 8x8 board.
 
-Boids ("bird-oids") is a simulation of flocking introduced in a paper by
-Craig Reynolds in 1987. You can see an online version of how these boids
-behave on the Processing site, here:
+There are two players, black and white, who take turns placing disks on the board.
 
-https://processing.org/examples/flocking.html
+The first two moves for each player involve placing a disk in one of the four central squares of the board. For these two moves,
+no captures are made. (We're doing the original 1883 rules.) Programming hint: after these moves, there are four pieces on the board.
 
-Each boid has a position and a velocity. At each step, the boid will 
-move according to its velocity
+For all subsequent moves, a move is valid if it captures at least one piece. (See the examples on the wikipedia page, or try playing it online.)
+Note that captures can be horizontal, vertical, or diagonal, and a move might capture pieces on multiple axes.
 
-    newPosition = position + velocity
+If a player has no valid moves, their turn is skipped.
 
-And change velocity based on a calculated acceleration
+If neither player has a valid move, the game ends and the player with the most pieces on the board wins.
 
-    newVelocity = velocity + acceleration
-    
-Note that there's no measure of how long the timestep is. 
+Note: You are *not writing this for humans to play*.
 
-The acceleration is generally calculated as a mix of three forces for each
-boid:
+## Writing the simulation
 
-* Separation - if other boids are too close, it will try to move away from them
-* Alignment - it will try to match the velocity and direction of other boids within 50 pixels
-* Cohesion - it will try to steer towards the middle of its neighbours (where "neighbours" is all boids within 50 pixels)
+You are writing a model of the game in which the computer will play itself. A widget on the UI will let us alter the "lookahead" setting for the AI.
 
-Boids have a maximum velocity, and a maximum acceleration they can apply when steering
+* If Lookahead is 0, it will play a random valid move
+* If Lookahead is 1, it will play the move that leaves it with the most pieces after playing it.
+* If Lookahead is 2, it will play the move that leaves it with the most pieces after its opponent has played the best move with Lookahead of 1
+* If Lookahead is 3, it will play the move that leaves it with the most pieces after its opponent has played the best move with Lookahead of 2
+* etc.
 
-In our assignment 2, you're going to be implementing an augmented boids
-simulation using a mixture of functional and imperative programming.
+(Though you'll notice the mark scheme only goes so far as to try lookahead of 0, 1, and 2.)
 
-## Mixing functional and imperative programming
+The UI will ask your code to play a turn about once per second. 
 
-* Everything in `FrameMemory`, `SimulationFrame`, and `Boid` is pure and functional
-* `SimulationController` and the UI classes are imperative.
-
-There are also various properties that we're going to add to our simulation:
-
-* The wind
-* The ability to "startle" the boids by applying a random impulse to
-  each boid in the next frame
-* The ability to tell the simulation that at the next frame, it should
-  add a boid
-
-## What's provided
-
-I have provided most of the classes, but I've stripped out some of their
-implementation.
-
-Fully implemented, you have:
-
-* `Vec2` -- a class that can do vector addition and multiplication. So
-   that if you say `newPosition = position + velocity` it just works.
-  
-* `BoidsPanel` -- a panel that knows how to draw a `Seq[Boid]`
-
-  
-Partially implemented, you have: 
-   
-* `Boid` -- an immutable representation of a Boid. You will need to
-   work functionally to produce new sequences of `Boid`
-
-* extension methods for `Seq[Boid]` that I think will make your algorithms in `Boid` cleaner to write
-
-* `SimulationFrame`, which holds a `Seq[Boid]` but can also report various statistics on it
-
-* `FrameMemory`, which holds a memory of the last *n* frames of the simulation
-   
-* `SimulationController` -- a class the UI buttons and timer can call to control and run the simulation.
-
-* `BoidsApp` -- the runnable program, that creates a window, and adds the
-  `BoidsPanel` and some buttons. Note that the buttons' event handlers 
-  have not all yet been implemented.
-  
-## What the components need to do
-
-* The **Action Replay** button must take the simulation back to the oldest frame in  
-  the memory buffer (typically one second) and let the simulation continue 
-  again from there.  
-  Hint: think about which end you want to insert the frame.
-  
-* The **wind** buttons should set the wind strength and direction. As the
-  boids' velocity is normalised on the next tick, in practice this works as a
-  fairly effective flock steering mechanism. If you set the wind blowing right, 
-  you should see the flock sweep around to follow the wind.
-  
-* The **Startle boids** button should cause the simulation, at the next time
-  step, to perturb each boid by a velocity of `startleStrength` in a random 
-  direction (a different random direction for each boid)
-  
-* The **Regenesis** button should push a frame into the queue with `numBoids` boids heading from the
-  centre in random direction. Note this shoud *not* clear the queue -- hitting
-  **Action Replay** quickly after hitting **Regenesis** should jump back
-  into one of the old states. 
-
-* Clicking a point on the canvas should add a new boid into the simulation, 
-  heading in a random direction with a velocity of 1
-
-* There are also three labels at the foot of the simulation, which are intended to show some
-  data about the flock. (These are drawn from `Simulation.flockDir`, `Simulation.flockSpeed`, and `Simulation.flockSep`
-  which you'll need to implement.)
-
-  - Flock direction: The average direction of the flock. (Sum the velocity vectors and take its theta). You should be
-    able to see if this is working by seeing how it changes with the wind buttons
-
-  - Flock speed: The average speed of the flock. (Take the average of the magnitude of the velocity vectors). This should
-    stay more or less constant, because of how boids work
-
-  - Flock separation: The variance of the position of the flock. This one's a little trickier. Find the centroid of the flock
-    (average the position vectors). Then for each boid, calculate the square of its distance from the centroid. Return the 
-    mean of that. To test this, hit the "explosion of boids" button. It should drop to nearly zero and then grow.
+There is also a history of moves. Clicking in this history of moves will ask your simulation to go back in time as if that move had just been played.
+You will notice that the UI wants to keep an immutable `Seq[GameState]` rather than just a game state, for this purpose.
 
 ## Tests
 
-There are 3 marks for writing tests of functional components in your code (2 each for `Boid`, `Seq[Boid]`, and 
-`SimulationFrame` and/or `FrameMemory`). The point of this is not to ensure broad test coverage - this is not a 
-test-driven development unit - but to give you a little experience in how making code functional and composable makes it 
-amenable to unit testing.
+There are 2 marks for implementing unit tests for counting pieces of each player and detecting when the game is over.
+
+You will probably also find it helpful to write your own unit tests for other aspects as you develop your code.
 
 ## Marking
 
@@ -146,20 +66,14 @@ more formative and open-ended.
 
 Functionality: 
 
-* The boids simulation works: 6
-* Adding a boid by clicking the canvas works: 1
-* Wind works: 1
-* Startle works: 1
-* Regenesis works: 1 
-* Action replay works: 1
-* Mean direction, separation, and velocity works: 1 (together)
-
-Tests you've written:
-
-* At least 2 tests for Boid: 1
-* At least 2 tests for extension methods on Seq[Boid]: 1
-* At least 2 tests for SimulationFrame and/or FrameMemory: 1
+* The Reversi simulation works & plays valid moves: 6
+* Rewind (clicking in the move history list to rewind to that point in the game) works: 1
+* Play with lookahead 0 appears to work: 1
+* Play with lookahead 1 appears to work: 1
+* Play with lookahead 2 appears to work: 1
+* Test for counting pieces implemented and code works: 1
+* Test for gameOver implemented and code works: 1 
 
 Quality: 
 
-* Overall quality judgment (functional, readable, tidy, concise): 5
+* Overall quality judgment (functional, readable, tidy, concise): 3
