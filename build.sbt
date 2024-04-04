@@ -1,8 +1,8 @@
 lazy val root = (project in file(".")).
   settings(
     name := "Reversi",
-    version := "2023.0",
-    scalaVersion := "3.1.0"
+    version := "2024.0",
+    scalaVersion := "3.3.1"
   )
 
 run / fork := true

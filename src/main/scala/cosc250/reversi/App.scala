@@ -1,3 +1,6 @@
+// Don't delete the comment below -- it is a Scala-CLI "using" directive to instruct it to use ScalaFX UI framework
+//> using dep org.scalafx::scalafx::20.0.0-R31
+
 package cosc250.reversi
 
 import scalafx.Includes._
