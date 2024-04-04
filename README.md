@@ -72,27 +72,4 @@ WARNING: Unsupported JavaFX configuration: classes were loaded from 'unnamed mod
 
 This is normal. The reason it appears is because JavaFX (the UI kit used behind the scenes) is a Java module, but when loaded via ScalaFX, the program runs in the "unnamed module". It still works.
 
-## Tests
 
-There are 2 marks for implementing unit tests for counting pieces of each player and detecting when the game is over.
-
-You will probably also find it helpful to write your own unit tests for other aspects as you develop your code.
-
-## Marking
-
-The marking is aimed to be able to be done quickly, with the written feedback being
-more formative and open-ended.
-
-Functionality: 
-
-* The Reversi simulation works & plays valid moves: 6
-* Rewind (clicking in the move history list to rewind to that point in the game) works: 1
-* Play with lookahead 0 appears to work: 1
-* Play with lookahead 1 appears to work: 1
-* Play with lookahead 2 appears to work: 1
-* Test for counting pieces implemented and code works: 1
-* Test for gameOver implemented and code works: 1 
-
-Quality: 
-
-* Overall quality judgment (functional, readable, tidy, concise): 3
